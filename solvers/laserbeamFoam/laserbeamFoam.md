@@ -1,8 +1,8 @@
 ---
 title: laserbeamFoam
 layout: page
-nav_order: 2
-parent: Associated Projects
+nav_order: 1
+parent: Solvers
 ---
 
 # laserbeamFoam
