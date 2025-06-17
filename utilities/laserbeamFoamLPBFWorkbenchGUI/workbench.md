@@ -7,10 +7,8 @@ parent: Utilities
 
 # LPBF Workbench
 
-![alt text](workbench.png)
+<img src="workbench.png" alt="alt text" style="width:100%;">
 
 <!-- [Go to LPBF Workbench App](app.html){:target="_blank"} -->
 
-<div class="center-btn">
-  <a href="app.html" class="custom-btn" target="_blank">Open LPBF Workbench App</a>
-</div>
+<a href="app.html" class="custom-btn" target="_blank">Open LPBF Workbench App</a>
