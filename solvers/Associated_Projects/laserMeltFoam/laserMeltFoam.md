@@ -1,8 +1,8 @@
 ---
 title: laserMeltFoam
 layout: page
-nav_order: 2
-parent: Solvers
+nav_order: 1
+parent: Associated Projects
 ---
 
 # laserMeltFoam
