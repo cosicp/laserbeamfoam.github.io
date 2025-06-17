@@ -43,7 +43,9 @@ footer{
 .custom-btn {
   display: block;
   padding: 10px 20px;
-  background: rgb(104, 133, 165);
+  background: #2e85c7;
+  border: 2px solid #2e85c7;
+  width: 245px;
   color: #fff;
   text-decoration: none;
   border-radius: 4px;
@@ -52,7 +54,7 @@ footer{
 }
 
 .custom-btn:hover {
-  color: rgb(104, 133, 165);
+  color:  #2e85c7;
   background: rgb(255, 255, 255);
 }
 
