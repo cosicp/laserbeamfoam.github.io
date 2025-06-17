@@ -7,12 +7,8 @@ parent: Utilities
 
 # LPBF Workbench
 
-[Go to LPBF Workbench App](app.html){:target="_blank"}
+![alt text](workbench.png)
 
-## Description
+<!-- [Go to LPBF Workbench App](app.html){:target="_blank"} -->
 
-
-
-## How to use
-
-
+<a href="app.html" target="_blank" style="display:inline-block;padding:10px 20px;background:#007bff;color:#fff;text-decoration:none;border-radius:4px;">Go to LPBF Workbench App</a>
