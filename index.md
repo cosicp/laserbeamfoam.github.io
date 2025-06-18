@@ -30,8 +30,9 @@ The **Laser Melting Suite** is a collection of **OpenFOAM** solvers and utilitie
 </p>
 
 # Where do I start?
-
+<p align="justify">
 * The [Solvers](solvers/solvers.html) page provides a list of available solvers and their descriptions along with some tutorials and guides on installations.
 * The [Utilities](utilities/utilities.html) page provides a list of available utilities, their use and installation instructions.
 * The Documentation page is present within every solver page and it provides a description of the algorithms and equations used in the solvers and utilities.
 * The [Publications](publications/publications.html) page provides the list of resreach papres relevant to a specific solver. Make sure to check out the [how to cite](how_to_cite/how_to_cite.html) page if you are planning to use one of the solvers for a publication.
+</p>
