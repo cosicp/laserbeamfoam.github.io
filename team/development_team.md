@@ -31,7 +31,7 @@ nav_order: 6
 <img align="left"  width="22" style="padding-right:6px;padding-top:3px" src="svgs/building.svg"> University College Dublin / I-Form<br> 
 <img align="left"  width="22" style="padding-right:6px;padding-top:4px" src="svgs/mail.svg"> petar.cosic.101@gmail.com <br>
 <img align="left"  width="22" style="padding-right:6px;padding-top:5px" src="svgs/github_svg.svg"> [cosicp](https://github.com/cosicp){:target="_blank"} <br> 
-<img align="left"  width="22" style="padding-right:6px;padding-top:4px" src="svgs/orcid.png">[]()<br> 
+<img align="left"  width="22" style="padding-right:6px;padding-top:4px" src="svgs/orcid.png">[0009-0002-0341-6856](https://orcid.org/0009-0002-0341-6856)<br> 
 
 ---
 <img align="left" width="170" style="padding-right:30px" src="images/simon.jpeg"/>
@@ -40,7 +40,7 @@ nav_order: 6
 <img align="left"  width="22" style="padding-right:6px;padding-top:3px" src="svgs/building.svg"> University College Dublin / I-Form<br> 
 <img align="left"  width="22" style="padding-right:6px;padding-top:4px" src="svgs/mail.svg"> simon.rodriguezluzardo@ucd.ie <br>
 <img align="left"  width="22" style="padding-right:6px;padding-top:5px" src="svgs/github_svg.svg"> [ScimonCFD](https://github.com/ScimonCFD){:target="_blank"}  <br> 
-<img align="left"  width="22" style="padding-right:6px;padding-top:4px" src="svgs/orcid.png">[]()<br> 
+<img align="left"  width="22" style="padding-right:6px;padding-top:4px" src="svgs/orcid.png">[0000-0001-6924-2428](https://orcid.org/0000-0001-6924-2428)<br> 
 
 ---
 <br>

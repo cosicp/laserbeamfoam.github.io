@@ -12,26 +12,26 @@ in the following way:
 
 Example (laserbeamFoam):
 
-> laserbeamFoam: Laser ray-tracing and thermally induced state transition simulation toolkit
-> TF Flint, JD Robson, G Parivendhan, P Cardiff
-> SoftwareX, 2023
->  https://doi.org/10.1016/j.softx.2022.101299  // TODO CHANGE
+> Version 2.0 — LaserbeamFoam: Laser ray-tracing and thermally induced state transition simulation toolkit
+> Thomas F. Flint, Joseph D. Robson, Gowthaman Parivendhan, Philip Cardiff
+> SoftwareX, Volume 21, February 2024
+>  https://doi.org/10.1016/j.softx.2023.101612 
 
 
 The corresponding BibTeX entry:
 
 ```bibtex
-@article{Cardiff2025, // TODO CHANGE
-    author =     {TF Flint , JD Robson, G Parivendhan and P Cardiff $},
-    title =      {Laser ray-tracing and thermally induced state transition simulation toolkit},
+@article{Cardiff2025, 
+    author =     {Thomas F. Flint, Joseph D. Robson, Gowthaman Parivendhan, Philip Cardiff},
+    title =      {Version 2.0 — LaserbeamFoam: Laser ray-tracing and thermally induced state transition simulation toolkit},
     journal =    {SoftwareX},
-    year =       {2023}, 
-    publisher =  {The Open Journal},
-    volume =     {10}, // TODO CHANGE
-    number =     {108}, // TODO CHANGE
-    pages =      {7407}, // TODO CHANGE
-    doi =        {10.21105/joss.07407}, // TODO CHANGE
-    url =        {https://doi.org/10.1016/j.softx.2022.101299} // TODO CHANGE
+    year =       {2024}, 
+    publisher =  {Elsevier},
+    volume =     {25}, 
+    number =     {108}, 
+    pages =      {101612},
+    doi =        {10.1016/j.softx.2022.101299}, 
+    url =        {https://doi.org/10.1016/j.softx.2022.101299}
 }
 ```
 
