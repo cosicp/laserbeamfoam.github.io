@@ -13,25 +13,55 @@ originSphere.position.set(0, 0, 0);
 // scene.add(originSphere);
 
 // Add axes helper to show the axes
-const axesHelper = new THREE.AxesHelper(1.5); // length of axes
+// Create axes helper with flipped Y axis
+const axesHelper = new THREE.AxesHelper(0.6);
+axesHelper.scale.y = -1;
+axesHelper.scale.z = -1;
+const axisLength = 0.4;
+// Move the axes up and back
+axesHelper.position.set(-0.5, 0.5, 1);
 
-// X label (red)
-const xLabel = createAxisLabel("X", "#ff0000", new THREE.Vector3(1.7, 0, 0));
-// Y label (green)
-const yLabel = createAxisLabel("Y", "#00ff00", new THREE.Vector3(0, 1.7, 0));
-// Z label (blue)
-const zLabel = createAxisLabel("Z", "#0000ff", new THREE.Vector3(0, 0, 1.7));
-// scene.add(xLabel);
-// scene.add(yLabel);
-// scene.add(zLabel);
-// scene.add(axesHelper);
+var shift = [-0.1, -0.2, -0.2]; // Shift to align with the axes helper position
+
+const xLabel = createAxisLabel(
+  "X",
+  "#ff0000",
+  new THREE.Vector3(
+    axisLength + 0.2 + shift[0],
+    0.22 + shift[1],
+    0 + shift[2]
+  ).add(axesHelper.position)
+);
+const yLabel = createAxisLabel(
+  "Y",
+  "#00ff00",
+  new THREE.Vector3(0 + shift[0], -axisLength + shift[1], 0 + shift[2]).add(
+    axesHelper.position
+  )
+);
+const zLabel = createAxisLabel(
+  "Z",
+  "#0000ff",
+  new THREE.Vector3(
+    0 + shift[0],
+    0.22 + shift[1],
+    -axisLength - 0.2 + shift[2]
+  ).add(axesHelper.position)
+);
+scene.add(xLabel);
+scene.add(yLabel);
+scene.add(zLabel);
+
+// Usage:
+const thickAxes = createThickAxis(0.5, 0.01);
+scene.add(thickAxes);
 
 // Set the background to a solid color (e.g., white)
-scene.background = new THREE.Color("rgb(255, 255, 255)");
+scene.background = new THREE.Color("rgb(42, 42, 42)");
 
 // Add a grid helper to the scene
-const gridHelper = new THREE.GridHelper(10, 20, 0x888888, 0xcccccc);
-gridHelper.position.y = -0.5; // Align with shadow plane
+var gridHelper = new THREE.GridHelper(100, 200, 0x777700, 0x777777);
+gridHelper.position.y = -1; // Align with shadow plane
 scene.add(gridHelper);
 
 // Add ambient light for general illumination
@@ -68,7 +98,7 @@ var plate_height = parseFloat($("#plate_height").val()) || 1;
 var plate_height_input = document.getElementById("plate_height");
 var plate_length = parseFloat($("#plate_length").val()) || 1;
 var plate_length_input = document.getElementById("plate_length");
-var layer_thickness2 = parseFloat($("#layer_thickness").val()) || 1;
+var layer_thickness = (parseFloat($("#layer_thickness").val())* 3.2)/ 800 || 1;
 var layer_thickness_input = document.getElementById("layer_thickness");
 
 // 4. Create Box Geometry
@@ -76,7 +106,6 @@ var width = (plate_width * 3.2) / 800; // x axis
 var height = (plate_height * 3.2) / 800; // y axis
 var length = (plate_length * 3.2) / 800; // z axis
 
-const layer_thickness = (layer_thickness2 * 3.2) / 800; // y axis
 const geometry = new THREE.BoxGeometry(width, height, length);
 
 // 5. Create edges geometry and material
@@ -102,10 +131,10 @@ const edgeMaterial2 = new THREE.LineBasicMaterial({
   color: 0xff0000,
   linewidth: 2,
 });
-
+// Use the standard edge material for compatibility across browsers
+geometry2.translate(width / 2, layer_thickness / 2, -length / 2);
 var powderEdgeLines = new THREE.LineSegments(edges2, edgeMaterial2);
 
-geometry2.translate(width / 2, height / 2, -length / 2);
 powderEdgeLines.position.set(
   width / 2,
   height - 0.0001 + layer_thickness / 2,
@@ -117,7 +146,7 @@ scene.add(powderEdgeLines);
 
 // Convert micrometers to scene units
 var radius = scaleMicromToPx(25);
-const cylinderHeight = 1;
+const cylinderHeight = scaleMicromToPx(200);
 const cylinderGeometry = new THREE.CylinderGeometry(
   radius,
   radius,
@@ -126,7 +155,7 @@ const cylinderGeometry = new THREE.CylinderGeometry(
 );
 const cylinderMaterial = new THREE.MeshStandardMaterial({
   color: 0x33ff33,
-  opacity: 0.5,
+  opacity: 1,
   transparent: true,
 });
 
@@ -147,10 +176,11 @@ const camera = new THREE.PerspectiveCamera();
 camera.position.set(2.2, 2.5, 1);
 
 import { STLLoader } from "three/addons/loaders/STLLoader.js";
+import { STLExporter } from "three/addons/exporters/STLExporter.js";
 
 // Set up the renderer and attach it to the document
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(678, 830);
+renderer.setSize(814, 830);
 
 document
   .getElementById("laser_position_window")
@@ -182,7 +212,7 @@ $(document).ready(function () {
       color: 0xffffff,
       flatShading: true,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.9,
     });
     // Create a mesh from the geometry and material
     const mesh = new THREE.Mesh(geometry, material);
@@ -263,141 +293,20 @@ $(laser_radius_obj).on("input", function () {
 });
 
 $(plate_width_input).on("input", function () {
-  // Get new width value (for example, from an input)
-
-  var width = scaleMicromToPx($(this).val());
-  var length = scaleMicromToPx($("#plate_length").val());
-  var height = scaleMicromToPx($("#plate_height").val());
-
-  // Remove old plateEdgeLines from scene
-  scene.remove(plateEdgeLines);
-
-  // Create new geometry with updated width
-  const newGeometry = new THREE.BoxGeometry(width, height, length);
-  newGeometry.translate(width / 2, height / 2, -length / 2);
-
-  // Create new edges and plateEdgeLines
-  var edges = new THREE.EdgesGeometry(newGeometry);
-  plateEdgeLines = new THREE.LineSegments(edges, edgeMaterial);
-  scene.add(plateEdgeLines);
-
-  scene.remove(powderEdgeLines);
-  
-  const newGeometry_powder = new THREE.BoxGeometry(width, layer_thickness, length);
-  var powder_edges = new THREE.EdgesGeometry(newGeometry_powder);
-  powderEdgeLines = new THREE.LineSegments(powder_edges, edgeMaterial2);
-
-  powderEdgeLines.position.set(
-    width / 2,
-    height - 0.0001 + layer_thickness / 2,
-    -length / 2
-  );
-  scene.add(powderEdgeLines);
-
+  refreshPlateSize();
 });
 
 $(plate_height_input).on("input", function () {
-  // Get new width value (for example, from an input)
-
-  var width = scaleMicromToPx($("#plate_width").val());
-  var length = scaleMicromToPx($("#plate_length").val());
-  var height = scaleMicromToPx($(this).val());
-
-  // Remove old plateEdgeLines from scene
-  scene.remove(plateEdgeLines);
-
-  // Create new geometry with updated width
-  const newGeometry = new THREE.BoxGeometry(width, height, length);
-  newGeometry.translate(width / 2, height / 2, -length / 2);
-
-  // Create new edges and plateEdgeLines
-  var edges = new THREE.EdgesGeometry(newGeometry);
-  plateEdgeLines = new THREE.LineSegments(edges, edgeMaterial);
-  scene.add(plateEdgeLines);
-
-
-    scene.remove(powderEdgeLines);
-  
-  const newGeometry_powder = new THREE.BoxGeometry(width, layer_thickness, length);
-  var powder_edges = new THREE.EdgesGeometry(newGeometry_powder);
-  powderEdgeLines = new THREE.LineSegments(powder_edges, edgeMaterial2);
-
-  powderEdgeLines.position.set(
-    width / 2,
-    height - 0.0001 + layer_thickness / 2,
-    -length / 2
-  );
-
-  scene.add(powderEdgeLines);
-
+  refreshPlateSize();
 });
 
 $(plate_length_input).on("input", function () {
-  // Get new width value (for example, from an input)
-
-  var width = scaleMicromToPx($("#plate_width").val());
-  var length = scaleMicromToPx($(this).val());
-  var height = scaleMicromToPx($("#plate_height").val());
-
-  // Remove old plateEdgeLines from scene
-  scene.remove(plateEdgeLines);
-
-  // Create new geometry with updated width
-  const newGeometry = new THREE.BoxGeometry(width, height, length);
-  newGeometry.translate(width / 2, height / 2, -length / 2);
-
-  // Create new edges and plateEdgeLines
-  var edges = new THREE.EdgesGeometry(newGeometry);
-  plateEdgeLines = new THREE.LineSegments(edges, edgeMaterial);
-  scene.add(plateEdgeLines);
-
-
-
-  scene.remove(powderEdgeLines);
-
-  const newGeometry_powder = new THREE.BoxGeometry(width, layer_thickness, length);
-  var powder_edges = new THREE.EdgesGeometry(newGeometry_powder);
-  powderEdgeLines = new THREE.LineSegments(powder_edges, edgeMaterial2);
-
-  powderEdgeLines.position.set(
-    width / 2,
-    height - 0.0001 + layer_thickness / 2,
-    -length / 2
-  );
-
-  scene.add(powderEdgeLines);
-
-
-
+  refreshPlateSize();
 });
-
 
 $(layer_thickness_input).on("input", function () {
-  // Get new width value (for example, from an input)
-
-  var width = scaleMicromToPx($("#plate_width").val());
-  var height = scaleMicromToPx($("#plate_height").val());
-  var length = scaleMicromToPx($("#plate_length").val());
-
-  var thickness = scaleMicromToPx($(this).val());
-
-if (thickness>=0){
-  scene.remove(powderEdgeLines);
-
-  const newGeometry_powder = new THREE.BoxGeometry(width, thickness, length);
-  var powder_edges = new THREE.EdgesGeometry(newGeometry_powder);
-  powderEdgeLines = new THREE.LineSegments(powder_edges, edgeMaterial2);
-
-  powderEdgeLines.position.set(
-    width / 2,
-    height - 0.0001 + thickness / 2,
-    -length / 2
-  );
-  scene.add(powderEdgeLines);
-  }
+  refreshPlateSize();
 });
-
-
 
 // Add event listener for window resize
 
@@ -416,7 +325,7 @@ function createAxisLabel(text, color, position) {
   canvas.width = 128;
   canvas.height = 64;
   const ctx = canvas.getContext("2d");
-  ctx.font = "36px Courier";
+  ctx.font = "30px monospace";
   ctx.fillStyle = color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -438,3 +347,584 @@ function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
+
+function createThickAxis(length = 5, radius = 0.05) {
+  const group = new THREE.Group();
+
+  const createAxis = (color, rotation, position) => {
+    const geometry = new THREE.CylinderGeometry(radius, radius, length, 8);
+    const material = new THREE.MeshBasicMaterial({ color });
+    const mesh = new THREE.Mesh(geometry, material);
+
+    mesh.rotation.set(...rotation);
+    mesh.position.set(...position);
+    group.add(mesh);
+  };
+
+  var shift = [-0.1, -0.2, -0.2]; // Shift to align with the axes helper position
+
+  // X axis - Red
+  createAxis(
+    0xff0000,
+    [0, 0, Math.PI / 2],
+    [-0.253 + shift[0], 0.75 + shift[1], 1 + shift[2]]
+  );
+
+  // Y axis - Green
+  createAxis(
+    0x00ff00,
+    [0, 0, 0],
+    [-0.5 + shift[0], 0.5 + shift[1], 1 + shift[2]]
+  );
+
+  // Z axis - Blue
+  createAxis(
+    0x0000ff,
+    [Math.PI / 2, 0, 0],
+    [-0.5 + shift[0], 0.75 + shift[1], 0.75 + shift[2]]
+  );
+
+  return group;
+}
+
+
+  // plate_width_input.addEventListener('change', () => {
+  //  refreshPlateSize();
+  // })
+
+  // plate_height_input.addEventListener('change', () => {
+  //   refreshPlateSize();
+  // })
+
+  // plate_length_input.addEventListener('change', () => {
+  //  refreshPlateSize();
+  // })
+
+
+function refreshPlateSize() {
+
+  var width = scaleMicromToPx($("#plate_width").val());
+  var length = scaleMicromToPx($("#plate_length").val());
+  var height = scaleMicromToPx($("#plate_height").val());
+  var layer_thickness = scaleMicromToPx($("#layer_thickness").val());
+
+  // Remove old plateEdgeLines from scene
+  scene.remove(plateEdgeLines);
+
+  // Create new geometry with updated width
+  const newGeometry = new THREE.BoxGeometry(width, height, length);
+  newGeometry.translate(width / 2, height / 2, -length / 2);
+
+  // Create new edges and plateEdgeLines
+  var edges = new THREE.EdgesGeometry(newGeometry);
+  plateEdgeLines = new THREE.LineSegments(edges, edgeMaterial);
+  scene.add(plateEdgeLines);
+
+  scene.remove(powderEdgeLines);
+  const newGeometry_powder = new THREE.BoxGeometry(
+    width,
+    layer_thickness,
+    length
+  );
+  var powder_edges = new THREE.EdgesGeometry(newGeometry_powder);
+  powderEdgeLines = new THREE.LineSegments(powder_edges, edgeMaterial2);
+
+  powderEdgeLines.position.set(
+    width / 2,
+    height - 0.0001 + layer_thickness / 2,
+    -length / 2
+  );
+
+  scene.add(powderEdgeLines);
+
+}
+
+ $(function () {
+      let interval;
+
+      function holdButton($btn, direction, input ) {
+        const start = () => {
+          if (direction === 'up') input.stepUp();
+          else input.stepDown();
+          refreshPlateSize()
+
+          interval = setInterval(() => {
+            if (direction === 'up') input.stepUp();
+            else input.stepDown();
+            refreshPlateSize()
+          }, 90); // adjust speed here
+        };
+
+        const stop = () => clearInterval(interval);
+
+        $btn
+          .on('mousedown touchstart', start)
+          .on('mouseup mouseleave touchend touchcancel', stop);
+      }
+
+      holdButton($('#plate_width_plus'), 'up', document.getElementById('plate_width'));
+      holdButton($('#plate_width_minus'), 'down', document.getElementById('plate_width'));
+
+
+      holdButton($('#plate_height_plus'), 'up', document.getElementById('plate_height'));
+      holdButton($('#plate_height_minus'), 'down', document.getElementById('plate_height'));
+
+      holdButton($('#plate_length_plus'), 'up', document.getElementById('plate_length'));
+      holdButton($('#plate_length_minus'), 'down', document.getElementById('plate_length'));
+
+      holdButton($('#layer_thickness_plus'), 'up', document.getElementById('layer_thickness'));
+      holdButton($('#layer_thickness_minus'), 'down', document.getElementById('layer_thickness'));
+
+    });
+
+
+
+
+  document.getElementById("download_liggghts_input_button").addEventListener("click", async () => {
+
+    const zip = new JSZip();
+
+
+    var liggghts_input = `# Trial run of Powder loading
+
+atom_style		granular
+atom_modify		map	array
+boundary		m	m	m
+newton			off
+
+communicate		single vel yes
+
+units 			cgs
+
+region			domain block 0.0 ${parseFloat($("#plate_width").val())/10000} 0.0 ${parseFloat($("#plate_length").val())/10000} 0.0 ${(parseFloat($("#plate_height").val())+parseFloat($("#layer_thickness").val()))*3.33/10000} units box
+
+create_box		1 domain
+
+neighbor		0.008101 bin
+neigh_modify	delay 1
+
+### Setup
+
+# Material and Interaction Properties
+fix 		m1 all property/global youngsModulus peratomtype 5e7
+fix 		m2 all property/global poissonsRatio peratomtype 0.45
+fix 		m3 all property/global coefficientRestitution peratomtypepair 1 0.1
+fix 		m4 all property/global coefficientFriction peratomtypepair 1 0.065
+
+# New pair style
+pair_style gran model hertz tangential history #Hertzian without cohesion
+pair_coeff	* *
+
+# Integrator
+fix			integrate all nve/sphere
+
+# Time step
+timestep	0.00000005
+
+# Gravity
+fix		grav all gravity 981 vector 0.0 0.0 -1.0
+
+# Particle Insertion
+fix				pts1 all particletemplate/sphere 15485863 atom_type 1 density constant 4.43 &
+				radius constant 0.0004625
+fix				pts2 all particletemplate/sphere 154849 atom_type 1 density constant 4.43 &
+				radius constant 0.000525
+fix				pts3 all particletemplate/sphere 49979687 atom_type 1 density constant 4.43 &
+				radius constant 0.0005965
+fix				pts4 all particletemplate/sphere 15485867 atom_type 1 density constant 4.43 &
+				radius constant 0.000678
+fix				pts5 all particletemplate/sphere 32452843 atom_type 1 density constant 4.43 &
+				radius constant 0.0007705	
+fix				pts6 all particletemplate/sphere 32452867 atom_type 1 density constant 4.43 &
+				radius constant 0.0008755	
+fix				pts7 all particletemplate/sphere 67867979 atom_type 1 density constant 4.43 &
+				radius constant 0.0009945
+fix				pts8 all particletemplate/sphere 86028121 atom_type 1 density constant 4.43 &
+				radius constant 0.0011301
+fix				pts9 all particletemplate/sphere 16193 atom_type 1 density constant 4.43 &
+				radius constant 0.001284
+fix				pts10 all particletemplate/sphere 17167 atom_type 1 density constant 4.43 &
+				radius constant 0.00145885
+fix				pts11 all particletemplate/sphere 16981 atom_type 1 density constant 4.43 &
+				radius constant 0.0016575
+fix				pts12 all particletemplate/sphere 17609 atom_type 1 density constant 4.43 &
+				radius constant 0.00188315
+fix				pts13 all particletemplate/sphere 67867967 atom_type 1 density constant 4.43 &
+				radius constant 0.0021395
+fix				pts14 all particletemplate/sphere 49979693 atom_type 1 density constant 4.43 &
+				radius constant 0.0024309			
+fix				pts15 all particletemplate/sphere 31891 atom_type 1 density constant 4.43 &
+				radius constant 0.002762	
+fix				pts16 all particletemplate/sphere 31223 atom_type 1 density constant 4.43 &
+				radius constant 0.003138	
+fix				pts17 all particletemplate/sphere 27191 atom_type 1 density constant 4.43 &
+				radius constant 0.00356531	
+fix				pts18 all particletemplate/sphere 27751 atom_type 1 density constant 4.43 &
+				radius constant 0.0040505	
+
+fix 				pdd all particledistribution/discrete 78593 18 pts1 1.97883E-06 pts2 0.000158863 pts3 0.002123547 pts4 0.009419927 &
+				pts5 0.024542522 pts6 0.047522205 pts7 0.07564377 pts8 0.103955961 pts9 0.126582204 pts10 0.138350101 pts11 0.136320196 &
+				pts12 0.120736947 pts13 0.095077524 pts14 0.065101351 pts15 0.037187843 pts16 0.015932988 pts17 0.001336914 pts18 5.1597E-06
+
+
+region 				factory block 0.0 0.01 0.0 0.015 0.02 0.1 units box
+fix 				ins all insert/rate/region seed 51869 distributiontemplate pdd &
+				nparticles 240 particlerate 200000 insert_every 5 &
+				overlapcheck yes vel constant 0. 0. 0.0 region factory ntry_mc 10000
+				
+			
+# Boundary
+fix box all mesh/surface file meshes/domain.stl type 1 scale 0.1 curvature 1e-5
+fix plate all mesh/surface file meshes/plate.stl type 1 scale 0.1 curvature 1e-5
+fix wall all wall/gran model hertz tangential history mesh n_meshes 2  meshes box plate
+
+variable x1 atom x*0.01
+variable y1 atom y*0.01
+variable z1 atom z*0.01
+
+compute 1 all property/atom radius
+variable rad1 atom "c_1*0.01"
+
+# Check time step and initialize dump file
+#fix ctg all check/timestep/gran 1 0.01 0.01
+run 1
+#unfix ctg
+
+#insert the first particles so that dump is not empty
+dump		dmp all custom/vtk 7500 post/trial_*.vtk id type type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+dump		mydump all custom 750000 post/location v_x1 v_y1 v_z1 v_rad1
+dump		mydump2 all custom 750000 post/parDist.xls v_rad1
+
+run			500000 upto
+
+compute         2 all reduce sum c_1
+thermo_style    custom step c_2
+run             0
+variable        co atom "z+c_1 > ${(parseFloat($("#plate_height").val())+parseFloat($("#layer_thickness").val()))/10000}"
+group           layer variable co
+
+
+delete_atoms group layer compress yes
+
+# Initial stage
+run			750000 upto
+
+`;
+
+
+var bedPlateDict = `/*--------------------------------*- C++ -*----------------------------------*
+| =========                 |                                                |
+| \\      /  F ield         | foam-extend: Open Source CFD                    |
+|  \\    /   O peration     | Version:     4.0                                |
+|   \\  /    A nd           | Web:         http://www.foam-extend.org         |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      bedPlateDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+Bed true;
+
+xmin 0.0;
+xmax ${parseFloat($("#plate_width").val())/1000000};
+
+ymin 0.0;
+ymax ${parseFloat($("#plate_length").val())/1000000};
+
+zmin 0.0;
+zmax ${parseFloat($("#plate_height").val())/1000000};
+
+// ************************************************************************* //`;
+
+    // Create a mesh from the box geometry (not the edges)
+    // Plate geometry
+    const export_geometry_box = new THREE.BoxGeometry(
+      parseFloat($("#plate_width").val()),
+      parseFloat($("#plate_height").val()),
+      parseFloat($("#plate_length").val())
+    );
+
+    // Move so that the minimum corner is at (0,0,0)
+    export_geometry_box.translate(
+      parseFloat($("#plate_width").val()) / 2,
+      parseFloat($("#plate_height").val()) / 2,
+      parseFloat($("#plate_length").val()) / 2
+    );
+
+    // Domain geometry
+    const export_geometry_domain = new THREE.BoxGeometry(
+      parseFloat($("#plate_width").val()),
+      (parseFloat($("#plate_height").val()) + parseFloat($("#layer_thickness").val())) * 3.33,
+      parseFloat($("#plate_length").val())
+    );
+    // Move so that the minimum corner is at (0,0,0)
+    export_geometry_domain.translate(
+      parseFloat($("#plate_width").val()) / 2,
+      ((parseFloat($("#plate_height").val()) + parseFloat($("#layer_thickness").val())) * 3.33) / 2,
+      parseFloat($("#plate_length").val()) / 2
+    );
+
+    const export_mesh_box = new THREE.Mesh(export_geometry_box, new THREE.MeshBasicMaterial());
+    const export_mesh_domain = new THREE.Mesh(export_geometry_domain, new THREE.MeshBasicMaterial());
+
+    const exporter = new STLExporter();
+    const stl_string_box = exporter.parse(export_mesh_box);
+    const stl_string_domain = exporter.parse(export_mesh_domain);
+
+  // Simulate folder and files
+  zip.folder("DEM_liggghts_case").file("mesh/plate.stl", stl_string_box);
+  zip.folder("DEM_liggghts_case").file("mesh/domain.stl", stl_string_domain);
+  zip.folder("DEM_liggghts_case").file("input.liggghts", liggghts_input);
+  zip.folder("DEM_liggghts_case").file("OpenFOAM/system/bedPlateDict", bedPlateDict);
+  // Create zip file
+  const blob = await zip.generateAsync({ type: "blob" });
+
+  // Trigger download
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "DEM_liggghts_case.zip";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
+
+ $("#info_div_input").val(generateLiggghtsInput(parseFloat($("#plate_width").val())/10000, parseFloat($("#plate_height").val()/10000, parseFloat($("#plate_length").val())/10000,  parseFloat($("#layer_thickness").val())/10000)));
+
+
+$("#show_liggghts_input_file").on("click", function () {
+
+  $("#info_div").removeClass("hidden");
+  $("#info_div").addClass("revealed");
+
+  $("#info_div_content").removeClass("hidden");
+  $("#info_div_content").addClass("revealed");
+ 
+})
+
+
+
+function generateLiggghtsInput(width, height, length, layer_thickness) {
+
+var liggghts_input = `# Trial run of Powder loading
+
+atom_style		granular
+atom_modify		map	array
+boundary		m	m	m
+newton			off
+
+communicate		single vel yes
+
+units 			cgs
+
+region			domain block 0.0 ${width} 0.0 ${length} 0.0 ${height} units box
+
+create_box		1 domain
+
+neighbor		0.008101 bin
+neigh_modify	delay 1
+
+### Setup
+
+# Material and Interaction Properties
+fix 		m1 all property/global youngsModulus peratomtype 5e7
+fix 		m2 all property/global poissonsRatio peratomtype 0.45
+fix 		m3 all property/global coefficientRestitution peratomtypepair 1 0.1
+fix 		m4 all property/global coefficientFriction peratomtypepair 1 0.065
+
+# New pair style
+pair_style gran model hertz tangential history #Hertzian without cohesion
+pair_coeff	* *
+
+# Integrator
+fix			integrate all nve/sphere
+
+# Time step
+timestep	0.00000005
+
+# Gravity
+fix		grav all gravity 981 vector 0.0 0.0 -1.0
+
+# Particle Insertion
+fix				pts1 all particletemplate/sphere 15485863 atom_type 1 density constant 4.43 &
+				radius constant 0.0004625
+fix				pts2 all particletemplate/sphere 154849 atom_type 1 density constant 4.43 &
+				radius constant 0.000525
+fix				pts3 all particletemplate/sphere 49979687 atom_type 1 density constant 4.43 &
+				radius constant 0.0005965
+fix				pts4 all particletemplate/sphere 15485867 atom_type 1 density constant 4.43 &
+				radius constant 0.000678
+fix				pts5 all particletemplate/sphere 32452843 atom_type 1 density constant 4.43 &
+				radius constant 0.0007705	
+fix				pts6 all particletemplate/sphere 32452867 atom_type 1 density constant 4.43 &
+				radius constant 0.0008755	
+fix				pts7 all particletemplate/sphere 67867979 atom_type 1 density constant 4.43 &
+				radius constant 0.0009945
+fix				pts8 all particletemplate/sphere 86028121 atom_type 1 density constant 4.43 &
+				radius constant 0.0011301
+fix				pts9 all particletemplate/sphere 16193 atom_type 1 density constant 4.43 &
+				radius constant 0.001284
+fix				pts10 all particletemplate/sphere 17167 atom_type 1 density constant 4.43 &
+				radius constant 0.00145885
+fix				pts11 all particletemplate/sphere 16981 atom_type 1 density constant 4.43 &
+				radius constant 0.0016575
+fix				pts12 all particletemplate/sphere 17609 atom_type 1 density constant 4.43 &
+				radius constant 0.00188315
+fix				pts13 all particletemplate/sphere 67867967 atom_type 1 density constant 4.43 &
+				radius constant 0.0021395
+fix				pts14 all particletemplate/sphere 49979693 atom_type 1 density constant 4.43 &
+				radius constant 0.0024309			
+fix				pts15 all particletemplate/sphere 31891 atom_type 1 density constant 4.43 &
+				radius constant 0.002762	
+fix				pts16 all particletemplate/sphere 31223 atom_type 1 density constant 4.43 &
+				radius constant 0.003138	
+fix				pts17 all particletemplate/sphere 27191 atom_type 1 density constant 4.43 &
+				radius constant 0.00356531	
+fix				pts18 all particletemplate/sphere 27751 atom_type 1 density constant 4.43 &
+				radius constant 0.0040505	
+
+fix 				pdd all particledistribution/discrete 78593 18 pts1 1.97883E-06 pts2 0.000158863 pts3 0.002123547 pts4 0.009419927 &
+				pts5 0.024542522 pts6 0.047522205 pts7 0.07564377 pts8 0.103955961 pts9 0.126582204 pts10 0.138350101 pts11 0.136320196 &
+				pts12 0.120736947 pts13 0.095077524 pts14 0.065101351 pts15 0.037187843 pts16 0.015932988 pts17 0.001336914 pts18 5.1597E-06
+
+
+region 				factory block 0.0 0.01 0.0 0.015 0.02 0.1 units box
+fix 				ins all insert/rate/region seed 51869 distributiontemplate pdd &
+				nparticles 240 particlerate 200000 insert_every 5 &
+				overlapcheck yes vel constant 0. 0. 0.0 region factory ntry_mc 10000
+				
+			
+# Boundary
+fix box all mesh/surface file meshes/domain.stl type 1 scale 0.1 curvature 1e-5
+fix plate all mesh/surface file meshes/plate.stl type 1 scale 0.1 curvature 1e-5
+fix wall all wall/gran model hertz tangential history mesh n_meshes 2  meshes box plate
+
+variable x1 atom x*0.01
+variable y1 atom y*0.01
+variable z1 atom z*0.01
+
+compute 1 all property/atom radius
+variable rad1 atom "c_1*0.01"
+
+# Check time step and initialize dump file
+#fix ctg all check/timestep/gran 1 0.01 0.01
+run 1
+#unfix ctg
+
+#insert the first particles so that dump is not empty
+dump		dmp all custom/vtk 7500 post/trial_*.vtk id type type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+dump		mydump all custom 750000 post/location v_x1 v_y1 v_z1 v_rad1
+dump		mydump2 all custom 750000 post/parDist.xls v_rad1
+
+run			500000 upto
+
+compute         2 all reduce sum c_1
+thermo_style    custom step c_2
+run             0
+variable        co atom "z+c_1 > ${height+layer_thickness}"
+group           layer variable co
+
+
+delete_atoms group layer compress yes
+
+# Initial stage
+run			750000 upto
+
+`;
+
+  return liggghts_input;
+}
+
+
+
+function generateBedPlateDict(width, height, length) {
+
+var bedPlateDict = `/*--------------------------------*- C++ -*----------------------------------*
+| =========                 |                                                |
+| \\      /  F ield         | foam-extend: Open Source CFD                    |
+|  \\    /   O peration     | Version:     4.0                                |
+|   \\  /    A nd           | Web:         http://www.foam-extend.org         |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      bedPlateDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+Bed true;
+
+xmin 0.0;
+xmax ${width};
+
+ymin 0.0;
+ymax ${height};
+
+zmin 0.0;
+zmax ${length};
+
+// ************************************************************************* //`;
+
+  return bedPlateDict;
+}
+
+
+
+$("#close_div").on("click", function () {
+
+  $("#info_div").addClass("hidden");
+  $("#info_div").removeClass("revealed");
+
+  $("#info_div_content").addClass("hidden");
+  $("#info_div_content").removeClass("revealed");
+
+})
+
+
+
+$("#info_div_title_1").on("click", function () {
+  $("#info_div_title_1").addClass("info_div_active");
+  $("#info_div_title_2").removeClass("info_div_active");
+
+  $("#info_div_input").val(generateLiggghtsInput(parseFloat($("#plate_width").val())/10000, parseFloat($("#plate_height").val()/10000, parseFloat($("#plate_length").val())/10000,  parseFloat($("#layer_thickness").val())/10000)));
+
+})
+
+$("#info_div_title_2").on("click", function () {
+  $("#info_div_title_1").removeClass("info_div_active");
+  $("#info_div_title_2").addClass("info_div_active");
+$("#info_div_input").val(generateBedPlateDict(parseFloat($("#plate_width").val())/1000000, parseFloat($("#plate_height").val())/1000000, parseFloat($("#plate_length").val())/1000000));
+})
+
+
+
+$("#light_theme").on("click", function () {
+  $("#light_theme").addClass("active_theme");
+  $("#dark_theme").removeClass("active_theme");
+
+  $("body").css("background", "#d8d8d8");
+  $("body").css("transition", "background 0.4s");
+
+  scene.background = new THREE.Color("rgb(255, 255, 255)");
+})
+
+$("#dark_theme").on("click", function () {
+
+  $("#light_theme").removeClass("active_theme");
+  $("#dark_theme").addClass("active_theme");
+
+  $("body").css("background", "#4b4b4b");
+  $("body").css("transition", "background 0.4s");
+
+  scene.background = new THREE.Color("rgb(42, 42, 42)");
+})
